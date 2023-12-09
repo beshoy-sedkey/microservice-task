@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  note-management:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'php artisan serve --host=0.0.0.0'
+    volumes:
+      - .:/app
+    ports:
+      - 8001:8000
+    depends_on:
+      - note-management-db
+    environment:
+    - RABBITMQ_HOST=${RABBITMQ_HOST}
+    - RABBITMQ_PORT=${RABBITMQ_PORT}
+    - RABBITMQ_USER=${RABBITMQ_USER}
+    - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    - RABBITMQ_VHOST=${RABBITMQ_VHOST}
+    - RABBITMQ_QUEUE=${RABBITMQ_QUEUE}
+    - RABBITMQ_EXCHANGE_NAME=${RABBITMQ_EXCHANGE_NAME}
+    - RABBITMQ_EXCHANGE_TYPE=${RABBITMQ_EXCHANGE_TYPE}
+    - RABBITMQ_EXCHANGE_DECLARE=${RABBITMQ_EXCHANGE_DECLARE}
+    networks:
+      - app-network
+
+  note-management-db:
+    image: mysql:5.7.22
+    environment:
+      MYSQL_DATABASE: note-management
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123456789
+      MYSQL_ROOT_PASSWORD: 123456789
+    volumes:
+      - ./storage/dbdata:/var/lib/mysql
+    ports:
+      - 33064:3306
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: note-management-db
+      PMA_USER: root
+      PMA_PASSWORD: 123456789
+    ports:
+      - "8081:80"
+    depends_on:
+      - note-management-db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    external: true
