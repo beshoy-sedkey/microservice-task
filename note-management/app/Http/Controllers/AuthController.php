@@ -2,27 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\AuthRequest;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
-    public function login(AuthRequest $request)
+      /**
+     * Handle a login request to the application.
+     *
+     * @param LoginRequest $request
+     * @return JsonResponse
+     */
+    public function login(AuthRequest $request): JsonResponse
     {
-        try {
-            $credentials = $request->only('email', 'password');
-            // Attempt to verify the credentials and create a token for the user
-            if (!$token = auth('api')->attempt($credentials)) {
-                return response()->json(['error' => 'Unauthorized'], 401);
-            }
-            // Now return this token as part of the JSON response
-            return response()->json(['token' => $token]);
-        } catch (\Throwable $th) {
-            return $th->getMessage();
+        $credentials = $request->validated();
+        $token = $this->attemptLogin($credentials);
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        return response()->json(['token' => $token]);
+    }
+
+     /**
+     * attemptLogin
+     * @param array $credentials
+     *
+     * @return string|null
+     */
+    public function attemptLogin(array $credentials): ?string
+    {
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return null;
         }
 
+        return $token;
     }
 }

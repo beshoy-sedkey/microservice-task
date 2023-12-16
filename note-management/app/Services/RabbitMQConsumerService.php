@@ -1,39 +1,43 @@
 <?php
 namespace App\Services;
+
+use App\Events\UserCreatedEvent;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Illuminate\Contracts\Bus\Dispatcher;
 use App\Jobs\TestJob;
+use App\Models\User;
 
 class RabbitMQConsumerService
 {
-    protected $connection;
-    protected $channel;
-    protected $dispatcher;
+    public $connection;
+    public $channel;
+    public $dispatcher;
 
     public function __construct(Dispatcher $dispatcher)
     {
         $this->dispatcher = $dispatcher;
         $this->connection = new AMQPStreamConnection(
-            env('RABBITMQ_HOST'),
-            env('RABBITMQ_PORT'),
-            env('RABBITMQ_USER'),
-            env('RABBITMQ_PASSWORD'),
-            env('RABBITMQ_VHOST')
+            config('rabbitmq.host'),
+            config('rabbitmq.port'),
+            config('rabbitmq.user'),
+            config('rabbitmq.password'),
+            config('rabbitmq.vhost')
         );
         $this->channel = $this->connection->channel();
     }
 
     public function consume($queueName)
     {
-        $exchange = env('RABBITMQ_EXCHANGE_NAME');
+        $exchange = config('rabbitmq.exchange_name');
 
         $this->channel->queue_declare($queueName, false, true, false, false);
         $this->channel->queue_bind($queueName, $exchange);
 
         $callback = function ($msg) {
             $jobData = json_decode($msg->body, true);
-            $job = new TestJob($jobData);
-            $this->dispatcher->dispatch($job);
+            event(new UserCreatedEvent($jobData));
+            info($jobData);
+            return $jobData;
         };
 
         $this->channel->basic_consume($queueName, '', false, true, false, false, $callback);

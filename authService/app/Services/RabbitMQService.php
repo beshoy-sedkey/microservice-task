@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -12,20 +13,20 @@ class RabbitMQService
     public function __construct()
     {
         $this->connection = new AMQPStreamConnection(
-            env('RABBITMQ_HOST'),
-            env('RABBITMQ_PORT'),
-            env('RABBITMQ_USER'),
-            env('RABBITMQ_PASSWORD'),
-            env('RABBITMQ_VHOST')
+            config('rabbitmq.host'),
+            config('rabbitmq.port'),
+            config('rabbitmq.user'),
+            config('rabbitmq.password'),
+            config('rabbitmq.vhost')
         );
         $this->channel = $this->connection->channel();
-        $this->channel->exchange_declare('Dayra', 'fanout', false, true, false);
+        $this->channel->exchange_declare(config('rabbitmq.exchange_name'), config('rabbitmq.exchange_type'), false, true, false);
     }
 
     public function publishMessage(string $messageBody): void
     {
         $message = new AMQPMessage($messageBody);
-        $this->channel->basic_publish($message, 'Dayra');
+        $this->channel->basic_publish($message, config('rabbitmq.exchange_name'));
     }
 
     public function __destruct()

@@ -7,6 +7,7 @@ use App\Jobs\TestJob;
 use App\Jobs\UserCrated;
 use Illuminate\Http\Request;
 use App\Jobs\NewUserRegistered;
+use App\Events\UserCreatedEvent;
 use Illuminate\Http\JsonResponse;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Requests\LoginRequest;
@@ -37,7 +38,7 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = $this->userRepository->create($request->all());
-        $this->dispatchTestJobs($user);
+        event(new UserCreatedEvent($user));
         $token = $this->generateToken($user);
         return response()->json(['user' => $user, 'token' => $token], 201);
     }
@@ -56,20 +57,6 @@ class AuthController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         return response()->json(['token' => $token]);
-    }
-
-    /**
-     * Dispatch jobs related to the test.
-     *
-     * @param User $user
-     * @return void
-     */
-    protected function dispatchTestJobs($user): void
-    {
-        $passwordHash = $user->getAuthPassword();
-        TestJob::dispatch([
-            'user' => array_merge($user->toArray(), ['password' => $passwordHash])
-        ]);
     }
 
     /**
