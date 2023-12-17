@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\Repositories\NoteRepository;
+use App\Services\Repositories\NoteRepositoryInterface;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,10 +14,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-
-        $this->app->bindMethod(TestJob::class . '@handle', function ($job) {
-            return $job->handle();
-        });
+        App::bind(NoteRepositoryInterface::class , NoteRepository::class);
     }
 
     /**
@@ -22,7 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // $listener = $this->app->make(\App\Listeners\RabbitMQListener::class);
-        // $listener->handle();
+      //
     }
 }

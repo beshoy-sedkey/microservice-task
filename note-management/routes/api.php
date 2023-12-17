@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NoteManagementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,9 +16,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
 Route::post('login' , [AuthController::class , 'login']);
+
+Route::middleware('auth:api')->prefix('/note')->group(function(){
+    Route::post('/' , [NoteManagementController::class , 'create']);
+    Route::post('/{note}' , [NoteManagementController::class , 'update']);
+    Route::get('/{note}' , [NoteManagementController::class , 'show']);
+    Route::get('/' , [NoteManagementController::class , 'index']);
+    Route::delete('/{note}' , [NoteManagementController::class , 'delete']);
+});

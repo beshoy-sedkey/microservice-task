@@ -3,27 +3,29 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Faker\Generator as Faker;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class UserTest extends TestCase
 {
-    use RefreshDatabase;
+    use WithFaker , RefreshDatabase;
 
     /**
      * @test
      */
     public function testUserCreation()
     {
-        $user = User::factory()->create();
-        $faker = app(Faker::class);
+        $userData = [
+            'name' => $this->faker->name,
+            'email' => $this->faker->email,
+            'password' => 'password',
+        ];
 
-        $response = $this->post('/api/register', [
-            'name' => $user->name,
-            'email' => $faker->unique()->safeEmail,
-            'password' => '123456789',
+        $this->post('/api/register', $userData);
+
+        $this->assertDatabaseHas('users', [
+            'email' => $userData['email'],
         ]);
-
-        $response->assertStatus(201);
     }
 }
